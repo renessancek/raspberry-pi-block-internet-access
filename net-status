@@ -1,0 +1,16 @@
+#!/bin/bash
+# Kurzstatus: Routing + ob Output-Policy drop/accept
+set -euo pipefail
+echo "=== Default-Route ==="
+ip -4 route show default 2>/dev/null || echo "(keine IPv4 default route)"
+ip -6 route show default 2>/dev/null || echo "(keine IPv6 default route)"
+echo
+echo "=== nft output policy ==="
+nft -a list chain inet filter output 2>/dev/null | head -n 5 || echo "nftables filter/output nicht geladen"
+echo
+echo "=== Schnelltest ==="
+if ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
+  echo "Internet: ERREICHBAR (online-Modus oder Lücke)"
+else
+  echo "Internet: blockiert/unerreichbar (erwartet im LAN-Modus)"
+fi
