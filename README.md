@@ -1,25 +1,25 @@
 # raspberry-pi-block-internet-access
 
-LAN-only Networking für Raspberry Pi (Debian / Raspberry Pi OS **Trixie**): standardmäßig kein Internet, nur lokales Netz. Internet kurz freischalten für Updates (`net-online` / `net-offline`) via **nftables**.
+LAN-only networking for Raspberry Pi (Debian / Raspberry Pi OS **Trixie**): no internet by default, local network only. Briefly enable internet for updates (`net-online` / `net-offline`) using **nftables**.
 
-## Idee
+## Idea
 
-- **Normal:** Outbound nur zu privaten Netzen (LAN). Kein Internet.
+- **Normal:** outbound traffic only to private networks (LAN). No internet.
 - **Updates:** `sudo net-online` → `apt update` / `upgrade` → `sudo net-offline`
-- Nach Reboot wieder LAN-only (`/etc/nftables.conf` = LAN-Profil)
-- Optional: NetworkManager ohne Default-Gateway + IPv6 aus (zweite Schicht)
+- After reboot, LAN-only again (`/etc/nftables.conf` = LAN profile)
+- Optional: NetworkManager without a default gateway + IPv6 disabled (second layer)
 
-## Schnellstart
+## Quick start
 
-1. `config` anpassen (`LAN_CIDR`, `GATEWAY`, ggf. `NM_CONNECTION` aus `nmcli -t -f NAME connection show`)
-2. Auf dem Pi:
+1. Edit `config` (`LAN_CIDR`, `GATEWAY`, and if needed `NM_CONNECTION` from `nmcli -t -f NAME connection show`)
+2. On the Pi:
 
 ```bash
 sudo ./install.sh
 sudo net-status
 ```
 
-Erwartung: `ping 1.1.1.1` failt, Ping/SSH zu anderen Hosts im LAN geht.
+Expected: `ping 1.1.1.1` fails; ping/SSH to other hosts on the LAN still works.
 
 ## Updates
 
@@ -29,19 +29,19 @@ sudo apt update && sudo apt full-upgrade
 sudo net-offline
 ```
 
-## Dateien
+## Files
 
-| Datei | Rolle |
-|-------|--------|
-| `config` | Subnetz, Gateway, NM-Name, SSH-Port |
-| `gen-nftables.sh` | erzeugt LAN- und Online-Rulesets |
-| `install.sh` | installiert Scripts + aktiviert nftables |
-| `net-online` / `net-offline` / `net-status` | Umschalter |
-| `nm-lan-only-optional.sh` | optional: NM never-default, IPv6 off |
+| File | Role |
+|------|------|
+| `config` | Subnet, gateway, NM connection name, SSH port |
+| `gen-nftables.sh` | Generates LAN and online rulesets |
+| `install.sh` | Installs scripts and enables nftables |
+| `net-online` / `net-offline` / `net-status` | Toggle helpers |
+| `nm-lan-only-optional.sh` | Optional: NM never-default, IPv6 off |
 
-Nach Install landen die generierten Rules unter `/etc/nftables-lan.conf`, `/etc/nftables-online.conf`, Boot-Default `/etc/nftables.conf`.
+After install, generated rules live at `/etc/nftables-lan.conf`, `/etc/nftables-online.conf`, with boot default `/etc/nftables.conf`.
 
-## Config ändern
+## Changing config
 
 ```bash
 sudoedit /etc/lan-only/config
@@ -56,14 +56,14 @@ sudo nft flush ruleset
 sudo systemctl disable --now nftables
 ```
 
-## Hinweise
+## Notes
 
-- Raspberry Pi OS ab Bookworm/Trixie nutzt **NetworkManager** (nicht dhcpcd).
-- IPv6 mitfiltern oder im NM-Profil deaktivieren — sonst Leak am IPv4-Filter vorbei.
-- SSH-Session offen lassen und von einem zweiten Gerät im LAN testen, bevor du dich aussperrst.
+- Raspberry Pi OS from Bookworm/Trixie uses **NetworkManager** (not dhcpcd).
+- Filter IPv6 as well, or disable it on the NM profile — otherwise traffic can leak past the IPv4 filter.
+- Keep an SSH session open and test from a second device on the LAN before you lock yourself out.
 
-Beispiel-`config` in diesem Repo: `192.168.0.0/24` / Gateway `192.168.0.1` — an dein Netz anpassen.
+Example `config` in this repo: `192.168.0.0/24` / gateway `192.168.0.1` — adjust to your network.
 
-## Lizenz
+## License
 
 [GNU General Public License v3.0](LICENSE) (GPL-3.0).
