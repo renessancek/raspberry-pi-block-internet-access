@@ -1,12 +1,12 @@
 #!/bin/bash
-# Internet für Updates freigeben (nicht vergessen danach net-offline)
+# Allow internet for updates (do not forget net-offline afterwards)
 set -euo pipefail
 CONF="${LAN_ONLY_ONLINE_CONF:-/etc/nftables-online.conf}"
 if [[ ! -f "$CONF" ]]; then
-  echo "fehlt: $CONF — erst install.sh ausführen" >&2
+  echo "missing: $CONF — run install.sh first" >&2
   exit 1
 fi
 nft -f "$CONF"
-# Boot-Default bleibt LAN: nftables.conf nicht auf online umbiegen
-echo "Internet AN — danach: sudo net-offline"
-echo "Tipp: sudo apt update && sudo apt full-upgrade && sudo net-offline"
+# Boot default stays LAN: do not switch nftables.conf to online
+echo "Internet ON — afterwards: sudo net-offline"
+echo "Tip: sudo apt update && sudo apt full-upgrade && sudo net-offline"

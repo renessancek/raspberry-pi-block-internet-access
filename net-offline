@@ -1,12 +1,12 @@
 #!/bin/bash
-# Nur LAN — Internet zu
+# LAN only — internet blocked
 set -euo pipefail
 CONF="${LAN_ONLY_LAN_CONF:-/etc/nftables-lan.conf}"
 if [[ ! -f "$CONF" ]]; then
-  echo "fehlt: $CONF — erst install.sh ausführen" >&2
+  echo "missing: $CONF — run install.sh first" >&2
   exit 1
 fi
 nft -f "$CONF"
-# sicherstellen, dass Boot wieder LAN lädt
+# Ensure boot loads LAN rules again
 cp -f "$CONF" /etc/nftables.conf
-echo "Internet AUS — nur LAN ($CONF)"
+echo "Internet OFF — LAN only ($CONF)"

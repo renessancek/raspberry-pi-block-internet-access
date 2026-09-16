@@ -1,15 +1,15 @@
 #!/bin/bash
-# Installiert lan-only auf dem Pi (als root)
+# Install lan-only on the Pi (as root)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "Bitte mit sudo ausführen: sudo ./install.sh" >&2
+  echo "Run with sudo: sudo ./install.sh" >&2
   exit 1
 fi
 
 if [[ ! -f "$ROOT/config" ]]; then
-  echo "config fehlt neben install.sh" >&2
+  echo "config missing next to install.sh" >&2
   exit 1
 fi
 
@@ -30,14 +30,14 @@ install -m 0755 "$ROOT/nm-lan-only-optional.sh" /usr/local/sbin/nm-lan-only-opti
 
 /usr/local/sbin/gen-nftables-lan-only /etc/lan-only/config /etc
 
-# Regeln laden + persistent
+# Load rules and enable on boot
 systemctl enable nftables
 systemctl restart nftables
 
 echo
-echo "Fertig. Status prüfen: sudo net-status"
+echo "Done. Check status: sudo net-status"
 echo "Updates:          sudo net-online && sudo apt update && sudo apt full-upgrade && sudo net-offline"
-echo "Config ändern:    sudoedit /etc/lan-only/config && sudo gen-nftables-lan-only && sudo net-offline"
+echo "Change config:    sudoedit /etc/lan-only/config && sudo gen-nftables-lan-only && sudo net-offline"
 echo
-echo "Optional zweite Schicht (NM ohne Default-GW): sudo nm-lan-only-optional"
-echo "Vor dem Aktivieren: SSH-Session offen lassen und von einem zweiten Gerät im LAN testen."
+echo "Optional second layer (NM without default GW): sudo nm-lan-only-optional"
+echo "Before enabling: keep an SSH session open and test from a second device on the LAN."

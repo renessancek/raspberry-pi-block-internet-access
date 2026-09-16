@@ -1,17 +1,17 @@
-# /etc/lan-only/config — einmal anpassen, dann install.sh
+# /etc/lan-only/config — edit once, then run install.sh
 
-# Dein LAN (IPv4). Beispiele: 192.168.1.0/24  |  192.168.0.0/24  |  10.0.0.0/24
+# Your LAN (IPv4). Examples: 192.168.1.0/24  |  192.168.0.0/24  |  10.0.0.0/24
 LAN_CIDR="192.168.0.0/24"
 
-# Router/Gateway (nur für net-online / optionalen NM-Weg)
+# Router/gateway (for net-online / optional NM path)
 GATEWAY="192.168.0.1"
 
-# NetworkManager-Verbindungsname (siehe: nmcli -t -f NAME connection show)
+# NetworkManager connection name (see: nmcli -t -f NAME connection show)
 NM_CONNECTION="Wired connection 1"
 
-# SSH-Port (Standard 22)
+# SSH port (default 22)
 SSH_PORT="22"
 
-# Zusätzliche erlaubte private Netze (Komma-getrennt, ohne Leerzeichen nach Komma ok)
-# Bleibt meist so — deckt typische Heimnetze ab
+# Extra allowed private networks (comma-separated; spaces after commas are fine)
+# Usually leave as-is — covers typical home networks
 PRIVATE_V4="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16"
