@@ -63,3 +63,7 @@ sudo systemctl disable --now nftables
 - SSH-Session offen lassen und von einem zweiten Gerät im LAN testen, bevor du dich aussperrst.
 
 Beispiel-`config` in diesem Repo: `192.168.0.0/24` / Gateway `192.168.0.1` — an dein Netz anpassen.
+
+## Lizenz
+
+[GNU General Public License v3.0](LICENSE) (GPL-3.0).
