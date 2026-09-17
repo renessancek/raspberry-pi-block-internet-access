@@ -1,4 +1,4 @@
-# /etc/lan-only/config — edit once, then run install.sh
+# /etc/lan-only/config — edit once, then run install.sh / gen-nftables-lan-only
 
 # Your LAN (IPv4). Examples: 192.168.1.0/24  |  192.168.0.0/24  |  10.0.0.0/24
 LAN_CIDR="192.168.0.0/24"
@@ -11,6 +11,10 @@ NM_CONNECTION="Wired connection 1"
 
 # SSH port (default 22)
 SSH_PORT="22"
+
+# Extra TCP ports open from the LAN only (comma-separated). Empty = none beyond SSH.
+# Example: web UI on 8080
+LAN_TCP_PORTS="8080"
 
 # Extra allowed private networks (comma-separated; spaces after commas are fine)
 # Usually leave as-is — covers typical home networks

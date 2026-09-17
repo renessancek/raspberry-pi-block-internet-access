@@ -67,7 +67,7 @@ Debian’s `unattended-upgrades` still needs outbound internet; this timer is th
 
 | File | Role |
 |------|------|
-| `config` | Subnet, gateway, NM connection name, SSH port |
+| `config` | Subnet, gateway, NM connection name, SSH port, optional `LAN_TCP_PORTS` |
 | `gen-nftables.sh` | Generates LAN and online rulesets |
 | `install.sh` | Installs scripts, enables nftables + nightly timer |
 | `net-online` / `net-offline` / `net-status` | Toggle helpers |
@@ -76,6 +76,25 @@ Debian’s `unattended-upgrades` still needs outbound internet; this timer is th
 | `nm-lan-only-optional.sh` | Optional: NM never-default, IPv6 off |
 
 After install, generated rules live at `/etc/nftables-lan.conf`, `/etc/nftables-online.conf`, with boot default `/etc/nftables.conf`.
+
+
+## LAN services (inbound)
+
+The firewall **input** policy is drop. By default only SSH from `LAN_CIDR` is allowed.
+Set extra TCP ports in `config`:
+
+```bash
+LAN_TCP_PORTS="8080"
+```
+
+Then:
+
+```bash
+sudo gen-nftables-lan-only
+sudo net-offline
+```
+
+Multiple ports: `LAN_TCP_PORTS="8080,9090"`. This does not open them to the internet — only from your LAN.
 
 ## Changing config
 
@@ -98,6 +117,7 @@ sudo systemctl disable --now nftables
 - Raspberry Pi OS from Bookworm/Trixie uses **NetworkManager** (not dhcpcd).
 - Filter IPv6 as well, or disable it on the NM profile — otherwise traffic can leak past the IPv4 filter.
 - Keep an SSH session open and test from a second device on the LAN before you lock yourself out.
+- Inbound is drop-by-default: only SSH and ports listed in `LAN_TCP_PORTS` (from `LAN_CIDR`) are allowed. Example: `LAN_TCP_PORTS="8080"` for a LAN web UI.
 - Ensure the Pi clock/timezone is correct (`timedatectl`) so midnight matches what you expect.
 
 Example `config` in this repo: `192.168.0.0/24` / gateway `192.168.0.1` — adjust to your network.
