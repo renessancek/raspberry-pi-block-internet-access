@@ -1,0 +1,11 @@
+[Unit]
+Description=LAN-only nightly apt update (temporary internet window)
+After=network-online.target nftables.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/net-auto-update
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

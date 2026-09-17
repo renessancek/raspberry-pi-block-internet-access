@@ -7,6 +7,7 @@ LAN-only networking for Raspberry Pi (Debian / Raspberry Pi OS **Trixie**): no i
 - **Normal:** outbound traffic only to private networks (LAN). No internet.
 - **Updates:** `sudo net-online` → `apt update` / `upgrade` → `sudo net-offline`
 - After reboot, LAN-only again (`/etc/nftables.conf` = LAN profile)
+- **Nightly:** systemd timer at midnight opens a short internet window, runs `apt` upgrades, then returns to LAN-only
 - Optional: NetworkManager without a default gateway + IPv6 disabled (second layer)
 
 ## Quick start
@@ -21,7 +22,7 @@ sudo net-status
 
 Expected: `ping 1.1.1.1` fails; ping/SSH to other hosts on the LAN still works.
 
-## Updates
+## Updates (manual)
 
 ```bash
 sudo net-online
@@ -29,14 +30,49 @@ sudo apt update && sudo apt full-upgrade
 sudo net-offline
 ```
 
+Or one shot:
+
+```bash
+sudo net-auto-update
+```
+
+## Nightly auto-update
+
+`install.sh` enables a systemd timer that runs daily at **00:00** (Pi local time), with a small random delay (up to 10 minutes):
+
+1. `net-online`
+2. `apt-get update` + `full-upgrade` + `autoremove`
+3. Always `net-offline` afterwards (even if apt fails), via `trap`
+
+Useful commands:
+
+```bash
+systemctl status lan-only-auto-update.timer
+systemctl list-timers lan-only-auto-update.timer
+journalctl -u lan-only-auto-update.service
+sudo systemctl disable --now lan-only-auto-update.timer   # turn off
+sudo systemctl enable --now lan-only-auto-update.timer    # turn on again
+```
+
+To change the schedule, edit `OnCalendar=` in `/etc/systemd/system/lan-only-auto-update.timer` (or the copy in this repo before install), then:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart lan-only-auto-update.timer
+```
+
+Debian’s `unattended-upgrades` still needs outbound internet; this timer is the intended way to combine auto-updates with LAN-only networking.
+
 ## Files
 
 | File | Role |
 |------|------|
 | `config` | Subnet, gateway, NM connection name, SSH port |
 | `gen-nftables.sh` | Generates LAN and online rulesets |
-| `install.sh` | Installs scripts and enables nftables |
+| `install.sh` | Installs scripts, enables nftables + nightly timer |
 | `net-online` / `net-offline` / `net-status` | Toggle helpers |
+| `net-auto-update` | Online → apt → offline (used by the timer) |
+| `lan-only-auto-update.service` / `.timer` | Midnight systemd schedule |
 | `nm-lan-only-optional.sh` | Optional: NM never-default, IPv6 off |
 
 After install, generated rules live at `/etc/nftables-lan.conf`, `/etc/nftables-online.conf`, with boot default `/etc/nftables.conf`.
@@ -52,6 +88,7 @@ sudo net-offline
 ## Rollback
 
 ```bash
+sudo systemctl disable --now lan-only-auto-update.timer
 sudo nft flush ruleset
 sudo systemctl disable --now nftables
 ```
@@ -61,6 +98,7 @@ sudo systemctl disable --now nftables
 - Raspberry Pi OS from Bookworm/Trixie uses **NetworkManager** (not dhcpcd).
 - Filter IPv6 as well, or disable it on the NM profile — otherwise traffic can leak past the IPv4 filter.
 - Keep an SSH session open and test from a second device on the LAN before you lock yourself out.
+- Ensure the Pi clock/timezone is correct (`timedatectl`) so midnight matches what you expect.
 
 Example `config` in this repo: `192.168.0.0/24` / gateway `192.168.0.1` — adjust to your network.
 

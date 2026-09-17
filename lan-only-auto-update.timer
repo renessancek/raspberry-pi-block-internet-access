@@ -1,0 +1,10 @@
+[Unit]
+Description=Run lan-only auto-update daily at midnight
+
+[Timer]
+OnCalendar=*-*-* 00:00:00
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target

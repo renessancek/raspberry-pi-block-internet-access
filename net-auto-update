@@ -1,0 +1,20 @@
+#!/bin/bash
+# Briefly enable internet, run apt updates, then always return to LAN-only.
+set -euo pipefail
+
+NET_ONLINE="${NET_ONLINE:-/usr/local/sbin/net-online}"
+NET_OFFLINE="${NET_OFFLINE:-/usr/local/sbin/net-offline}"
+
+cleanup() {
+  echo "Returning to LAN-only..."
+  "$NET_OFFLINE" || true
+}
+trap cleanup EXIT
+
+echo "=== lan-only auto-update starting $(date -Is) ==="
+"$NET_ONLINE"
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get -y full-upgrade
+apt-get -y autoremove
+echo "=== lan-only auto-update finished $(date -Is) ==="
