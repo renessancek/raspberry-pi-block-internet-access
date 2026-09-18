@@ -42,6 +42,12 @@ install -m 0644 "$ROOT/lan-only-auto-update.timer" /etc/systemd/system/lan-only-
 systemctl enable nftables
 systemctl restart nftables
 
+# First migration from flush-ruleset builds may have wiped Docker chains — recreate them.
+if systemctl is-active --quiet docker 2>/dev/null || systemctl is-enabled --quiet docker 2>/dev/null; then
+  systemctl restart docker
+  echo "Restarted docker so DOCKER iptables/nft chains exist again."
+fi
+
 systemctl daemon-reload
 systemctl enable --now lan-only-auto-update.timer
 
@@ -54,6 +60,9 @@ echo "Nightly auto-update timer enabled (midnight, local time)."
 echo "  Status:  systemctl status lan-only-auto-update.timer"
 echo "  Logs:    journalctl -u lan-only-auto-update.service"
 echo "  Disable: sudo systemctl disable --now lan-only-auto-update.timer"
+echo
+echo "Docker: rules use table inet lan_only (no full flush). Published ports need LAN_TCP_PORTS"
+echo "        (e.g. 8080) and usually work after docker restart once after upgrading lan-only."
 echo
 echo "Optional second layer (NM without default GW): sudo nm-lan-only-optional"
 echo "Before enabling: keep an SSH session open and test from a second device on the LAN."
