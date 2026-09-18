@@ -68,7 +68,7 @@ Debian’s `unattended-upgrades` still needs outbound internet; this timer is th
 | File | Role |
 |------|------|
 | `config` | Subnet, gateway, NM connection name, SSH port, optional `LAN_TCP_PORTS` |
-| `gen-nftables.sh` | Generates LAN and online rulesets |
+| `gen-nftables.sh` | Generates LAN and online rulesets (`table inet lan_only`) |
 | `install.sh` | Installs scripts, enables nftables + nightly timer (keeps existing `/etc/lan-only/config`) |
 | `net-online` / `net-offline` / `net-status` | Toggle helpers |
 | `net-auto-update` | Online → apt → offline (used by the timer) |
@@ -98,6 +98,31 @@ Multiple ports: `LAN_TCP_PORTS="8080,9090"`. This does not open them to the inte
 
 Re-running `sudo ./install.sh` updates scripts and units but leaves `/etc/lan-only/config` alone if it already exists. Existing `/etc/lan-only/config` is **not** overwritten on reinstall; only created if missing.
 
+## Docker
+
+Older versions used `flush ruleset`, which deleted Docker’s `DOCKER` nat/filter chains and broke port publishing (`Unable to enable DNAT rule` / `No chain/target/match`).
+
+Current rules:
+
+- live in **`table inet lan_only` only** (legacy `inet filter` is removed on apply)
+- **do not** flush the whole nft ruleset
+- **do not** set a `forward` drop policy (Docker needs FORWARD for bridge/DNAT)
+
+After upgrading lan-only once:
+
+```bash
+cd /path/to/raspberry-pi-block-internet-access
+git pull
+sudo ./install.sh
+# or: sudo gen-nftables-lan-only && sudo net-offline && sudo systemctl restart docker
+
+cd ~/Dokumente/Projekte/expense_app_web   # example
+docker compose up -d
+sudo net-status   # should show DOCKER nat chain: OK
+```
+
+Ensure `LAN_TCP_PORTS` includes published host ports (e.g. `8080`). Git/`docker pull` still need internet: use `sudo net-online` for those steps, then `sudo net-offline`.
+
 ## Changing config
 
 ```bash
@@ -110,8 +135,10 @@ sudo net-offline
 
 ```bash
 sudo systemctl disable --now lan-only-auto-update.timer
-sudo nft flush ruleset
+sudo nft delete table inet lan_only 2>/dev/null || true
+sudo nft delete table inet filter 2>/dev/null || true
 sudo systemctl disable --now nftables
+sudo systemctl restart docker   # if you use Docker
 ```
 
 ## Notes
