@@ -1,12 +1,29 @@
 #!/bin/bash
-# Quick status: routing + whether output policy is drop/accept
+# Quick status: routing + whether lan_only output policy is drop/accept
 set -euo pipefail
 echo "=== Default route ==="
 ip -4 route show default 2>/dev/null || echo "(no IPv4 default route)"
 ip -6 route show default 2>/dev/null || echo "(no IPv6 default route)"
 echo
-echo "=== nft output policy ==="
-nft -a list chain inet filter output 2>/dev/null | head -n 5 || echo "nftables filter/output not loaded"
+echo "=== nft lan_only output policy ==="
+if nft -a list chain inet lan_only output 2>/dev/null | head -n 5; then
+  :
+elif nft -a list chain inet filter output 2>/dev/null | head -n 5; then
+  echo "(legacy table inet filter still present — re-run gen-nftables-lan-only)"
+else
+  echo "nftables lan_only/output not loaded"
+fi
+echo
+echo "=== Docker NAT chain (should exist if Docker is running) ==="
+if command -v iptables >/dev/null 2>&1; then
+  if iptables -t nat -L DOCKER -n >/dev/null 2>&1; then
+    echo "DOCKER nat chain: OK"
+  else
+    echo "DOCKER nat chain: MISSING (restart docker: sudo systemctl restart docker)"
+  fi
+else
+  echo "(iptables not installed)"
+fi
 echo
 echo "=== Quick test ==="
 if ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
