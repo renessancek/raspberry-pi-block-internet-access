@@ -13,15 +13,20 @@ if [[ ! -f "$ROOT/config" ]]; then
   exit 1
 fi
 
-# shellcheck source=/dev/null
-source "$ROOT/config"
-echo "LAN_CIDR=$LAN_CIDR  GATEWAY=$GATEWAY  SSH_PORT=$SSH_PORT"
-
 apt-get update -qq
 apt-get install -y nftables
 
 install -d -m 0755 /etc/lan-only
-install -m 0644 "$ROOT/config" /etc/lan-only/config
+if [[ -f /etc/lan-only/config ]]; then
+  echo "Keeping existing /etc/lan-only/config (not overwriting)."
+else
+  install -m 0644 "$ROOT/config" /etc/lan-only/config
+  echo "Installed default config to /etc/lan-only/config"
+fi
+# shellcheck source=/dev/null
+source /etc/lan-only/config
+echo "LAN_CIDR=$LAN_CIDR  GATEWAY=$GATEWAY  SSH_PORT=$SSH_PORT  LAN_TCP_PORTS=${LAN_TCP_PORTS:-}"
+
 install -m 0755 "$ROOT/gen-nftables.sh" /usr/local/sbin/gen-nftables-lan-only
 install -m 0755 "$ROOT/net-online" /usr/local/sbin/net-online
 install -m 0755 "$ROOT/net-offline" /usr/local/sbin/net-offline

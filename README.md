@@ -69,7 +69,7 @@ Debian’s `unattended-upgrades` still needs outbound internet; this timer is th
 |------|------|
 | `config` | Subnet, gateway, NM connection name, SSH port, optional `LAN_TCP_PORTS` |
 | `gen-nftables.sh` | Generates LAN and online rulesets |
-| `install.sh` | Installs scripts, enables nftables + nightly timer |
+| `install.sh` | Installs scripts, enables nftables + nightly timer (keeps existing `/etc/lan-only/config`) |
 | `net-online` / `net-offline` / `net-status` | Toggle helpers |
 | `net-auto-update` | Online → apt → offline (used by the timer) |
 | `lan-only-auto-update.service` / `.timer` | Midnight systemd schedule |
@@ -95,6 +95,8 @@ sudo net-offline
 ```
 
 Multiple ports: `LAN_TCP_PORTS="8080,9090"`. This does not open them to the internet — only from your LAN.
+
+Re-running `sudo ./install.sh` updates scripts and units but leaves `/etc/lan-only/config` alone if it already exists. Existing `/etc/lan-only/config` is **not** overwritten on reinstall; only created if missing.
 
 ## Changing config
 
